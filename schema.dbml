@@ -1,0 +1,577 @@
+// Otomatik üretildi — scripts/generate-docs.mjs içindeki şema verisinden.
+// Elle düzenlemeyin; kaynağı değiştirip `node scripts/generate-docs.mjs` çalıştırın.
+// dbdiagram.io'da açmak için: bu dosyanın içeriğini kopyalayıp dbdiagram.io'da yeni diyagrama yapıştırın.
+
+Table tenants {
+  id uuid [pk, note: "default gen_random_uuid()"]
+  legal_name varchar(255) [not null, note: "resmi unvan"]
+  display_name varchar(150)
+  tax_number varchar(50)
+  tax_office varchar(150)
+  sector varchar(100) [note: "AI event havuzunda (bkz. Mongo → ui_generation_events) şablon çıkarımı için de kullanılır"]
+  company_size varchar(20) [note: "1-10 / 11-50 / 51-200 / 200+"]
+  logo_url text
+  billing_email varchar(255)
+  contact_email varchar(255)
+  contact_phone varchar(50)
+  country varchar(100)
+  city varchar(100)
+  subdomain varchar(100) [unique, not null]
+  plan varchar(50) [note: "default 'trial'; hızlı gösterim için — asıl kaynak plan_id"]
+  plan_id uuid [note: "(YENİ) → subscription_plans.id, eksikti — eklendi"]
+  modules_enabled jsonb
+  settings jsonb
+  is_active boolean [note: "default true"]
+  trial_ends_at timestamptz
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "default now()"]
+}
+
+Table departments {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(150) [not null, note: "İK, Satış, Customer Success, Muhasebe…"]
+  parent_department_id uuid [note: "→ departments.id, iç içe dallanma"]
+  head_user_id uuid [note: "→ users.id"]
+  token_limit_monthly bigint [note: "(YENİ) NULL = üst sınır yok (tenant ortak havuzunu kullanır); doluysa bu departmanın aylık üst sınırı"]
+  is_active boolean [note: "(YENİ) default true; departman kapatıldığında geçmiş kayıtları bozmadan pasife çekmek için"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table job_levels {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(100) [not null, note: "Direktör, Müdür, Takım Lideri, Uzman, Çalışan"]
+  rank int [not null, note: "1 = en üst"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+}
+
+Table roles {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(150) [not null]
+  is_system_role boolean [note: "default false"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table users {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  first_name varchar(150) [not null]
+  last_name varchar(150) [not null]
+  email varchar(255) [not null]
+  phone varchar(50)
+  avatar_url text
+  job_title varchar(150)
+  department_id uuid [note: "→ departments.id"]
+  job_level_id uuid [note: "→ job_levels.id"]
+  role_id uuid [note: "→ roles.id"]
+  manager_id uuid [note: "→ users.id (self)"]
+  status varchar(20) [note: "default 'active'; active/invited/suspended"]
+  timezone varchar(50) [note: "default 'Europe/Istanbul'"]
+  locale varchar(10) [note: "default 'tr-TR'"]
+  last_login_at timestamptz
+  display_prefs jsonb
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "default now()"]
+}
+
+Table roles_permissions {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  role_id uuid [not null, note: "→ roles.id"]
+  entity_type varchar(50) [not null]
+  can_read boolean [note: "default true"]
+  can_write boolean [note: "default false"]
+  can_delete boolean [note: "default false"]
+  can_approve boolean [note: "default false"]
+}
+
+Table custom_field_definitions {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  entity_type varchar(50) [not null]
+  field_key varchar(100) [not null]
+  field_label varchar(150) [not null]
+  field_type varchar(50) [not null]
+  field_options jsonb
+  is_required boolean [note: "default false"]
+  display_order int [note: "default 0"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table activities {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  entity_type varchar(50) [not null, note: "örn. 'deal', 'contact'"]
+  entity_id uuid [not null]
+  activity_type varchar(50) [not null, note: "call/email/note/meeting"]
+  subject varchar(255)
+  content text
+  duration_minutes int
+  outcome varchar(100)
+  created_by uuid [note: "→ users.id"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table attachments {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  entity_type varchar(50) [not null]
+  entity_id uuid [not null]
+  file_name varchar(255) [not null]
+  file_url text [not null]
+  file_size_bytes bigint
+  uploaded_by uuid [note: "→ users.id"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table tasks {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  entity_type varchar(50)
+  entity_id uuid
+  title varchar(255) [not null]
+  description text
+  priority varchar(20) [note: "default 'medium'"]
+  due_date timestamptz
+  assigned_to uuid [note: "→ users.id"]
+  status varchar(20) [note: "default 'open'"]
+  board_column_id uuid [note: "→ board_columns.id"]
+  card_order int [note: "default 0"]
+  story_points int
+  completed_at timestamptz [note: "(YENİ) eksikti — status='done' olduğunda set edilir"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table tags {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(100) [not null]
+  color varchar(20)
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table taggables {
+  tenant_id uuid [not null, note: "(YENİ) → tenants.id — RLS (Row-Level Security) için denormalize edildi, eksikti"]
+  tag_id uuid [pk, not null, note: "→ tags.id"]
+  entity_type varchar(50) [pk, not null]
+  entity_id uuid [pk, not null]
+}
+
+Table notifications {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  user_id uuid [not null, note: "→ users.id"]
+  entity_type varchar(50)
+  entity_id uuid
+  title varchar(255) [not null]
+  body text
+  is_read boolean [note: "default false"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table companies {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(255) [not null]
+  company_type varchar(20) [note: "default 'prospect'; prospect/customer/supplier/partner"]
+  industry varchar(100)
+  tax_number varchar(50)
+  website varchar(255)
+  phone varchar(50)
+  email varchar(255)
+  employee_count int
+  annual_revenue numeric(16,2)
+  source varchar(100)
+  owner_id uuid [note: "→ users.id"]
+  status varchar(20) [note: "default 'active'"]
+  custom_fields jsonb
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "default now()"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table contacts {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  company_id uuid [note: "→ companies.id"]
+  first_name varchar(150) [not null]
+  last_name varchar(150) [not null]
+  job_title varchar(150)
+  department varchar(150)
+  email varchar(255)
+  phone varchar(50)
+  mobile_phone varchar(50)
+  linkedin_url varchar(255)
+  is_primary boolean [note: "default false"]
+  do_not_contact boolean [note: "default false; KVKK"]
+  custom_fields jsonb
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table addresses {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  company_id uuid [note: "→ companies.id"]
+  address_type varchar(20) [note: "default 'office'"]
+  country varchar(100)
+  city varchar(100)
+  district varchar(100)
+  full_address text
+  postal_code varchar(20)
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "(YENİ) eksikti — hiç timestamp yoktu, eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table pipeline_stages {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  name varchar(100) [not null]
+  order_index int [not null]
+  is_won boolean [note: "default false"]
+  is_lost boolean [note: "default false"]
+  color varchar(20)
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+}
+
+Table deals {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  company_id uuid [note: "→ companies.id"]
+  contact_id uuid [note: "→ contacts.id"]
+  stage_id uuid [note: "→ pipeline_stages.id"]
+  title varchar(255) [not null]
+  amount numeric(14,2)
+  currency varchar(10) [note: "default 'TRY'"]
+  probability smallint [note: "(YENİ) 0-100 arası, CHECK constraint — önceki revizyonda int'ti, daraltıldı"]
+  expected_close_date date
+  source varchar(100)
+  owner_id uuid [note: "→ users.id"]
+  status varchar(20) [note: "default 'open'"]
+  lost_reason varchar(255)
+  custom_fields jsonb
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "default now()"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table projects {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  code varchar(50) [note: "PRJ-001 gibi kısa referans"]
+  name varchar(255) [not null]
+  description text
+  status varchar(20) [note: "default 'active'"]
+  priority varchar(20) [note: "default 'medium'"]
+  owner_id uuid [note: "→ users.id"]
+  start_date date
+  end_date date
+  budget numeric(14,2)
+  custom_fields jsonb
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table project_members {
+  tenant_id uuid [not null, note: "(YENİ) → tenants.id — RLS için denormalize edildi, eksikti"]
+  project_id uuid [pk, not null, note: "→ projects.id"]
+  user_id uuid [pk, not null, note: "→ users.id"]
+  project_role varchar(20) [note: "default 'member'"]
+  joined_at timestamptz [note: "default now()"]
+}
+
+Table boards {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  project_id uuid [not null, note: "→ projects.id"]
+  name varchar(255) [not null]
+  board_type varchar(20) [note: "default 'kanban'"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table board_columns {
+  tenant_id uuid [not null, note: "(YENİ) → tenants.id — RLS için denormalize edildi, eksikti"]
+  id uuid [pk]
+  board_id uuid [not null, note: "→ boards.id"]
+  name varchar(100) [not null]
+  order_index int [not null, note: "default 0"]
+  wip_limit int
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+  deleted_at timestamptz [note: "(YENİ) NULL = aktif; doluysa soft-delete edilmiş — genel revizyonda eklendi"]
+}
+
+Table calendar_events {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  title varchar(255) [not null]
+  description text
+  start_time timestamptz [not null]
+  end_time timestamptz [not null]
+  is_all_day boolean [note: "default false"]
+  location varchar(255)
+  entity_type varchar(50)
+  entity_id uuid
+  external_calendar_provider varchar(50)
+  external_event_id varchar(255)
+  created_by uuid [note: "→ users.id"]
+  created_at timestamptz [note: "default now()"]
+  updated_at timestamptz [note: "(YENİ) eksikti — eklendi"]
+}
+
+Table calendar_event_attendees {
+  tenant_id uuid [not null, note: "(YENİ) → tenants.id — RLS için denormalize edildi, eksikti"]
+  event_id uuid [pk, not null, note: "→ calendar_events.id"]
+  user_id uuid [pk, not null, note: "→ users.id"]
+  rsvp_status varchar(20) [note: "default 'pending'"]
+}
+
+Table ai_conversations {
+  id uuid [pk, note: "Mongo tarafında conversation_id olarak referans alınır (app-level, DB FK değil)"]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  user_id uuid [not null, note: "→ users.id"]
+  title varchar(255)
+  started_at timestamptz [note: "default now()"]
+  last_message_at timestamptz
+  is_archived boolean [note: "default false"]
+  message_count int [note: "(YENİ) Mongo'daki mesaj sayısının senkron kopyası — liste ekranı Mongo'ya gitmeden çalışsın diye"]
+}
+
+Table permissions {
+  id uuid [pk]
+  catalog_type varchar(20) [not null, note: "'ui' | 'function' | 'tool' — catalog_item_id hangi tabloda aranacak, bunu belirler"]
+  catalog_item_id uuid [not null, note: "(YENİ) → ui_components.id / action_registry.id / tool_registry.id (catalog_type'a göre) — önceden catalog_item_name (isim) idi, düzeltildi"]
+  action varchar(20) [note: "default 'execute'; view/execute/write"]
+  requires_confirm boolean [note: "default false"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table role_permissions {
+  id uuid [pk]
+  tenant_id uuid [note: "→ tenants.id, NULL = global atama"]
+  role_id uuid [not null, note: "→ roles.id"]
+  permission_id uuid [not null, note: "→ permissions.id"]
+  granted_by uuid [note: "→ users.id, audit için"]
+  granted_at timestamptz [note: "default now()"]
+}
+
+Table ui_components {
+  id uuid [pk]
+  name varchar(100) [unique, not null, note: "'Table', 'BarChart', 'KPICard'…"]
+  category varchar(50) [note: "data-display / chart / comparison / action"]
+  prop_schema jsonb [not null, note: "LLM çıktısının prop'larını doğrulayan JSON Schema"]
+  description text [note: "LLM sistem promptunda 'ne zaman kullanılır' açıklaması"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table action_registry {
+  id uuid [pk]
+  name varchar(100) [unique, not null, note: "'create_task', 'export_pdf', 'send_reminder'"]
+  label_template varchar(150) [note: "Butonda gösterilecek metin şablonu"]
+  handler_ref varchar(150) [not null, note: "backend fonksiyon ismi — URL DEĞİL, sadece isim"]
+  required_params jsonb
+  risk_level varchar(20) [note: "default 'low'; low/medium/high"]
+  requires_confirm boolean [note: "default false"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+}
+
+Table tool_registry {
+  id uuid [pk]
+  name varchar(100) [unique, not null, note: "'get_deals', 'get_department_costs'"]
+  description text [note: "LLM'e: bu tool ne döner, ne zaman çağrılır"]
+  input_schema jsonb
+  output_shape_hint jsonb [note: "'kaç tablo/satır dönebilir' ipucu"]
+  underlying_query_ref varchar(150) [not null, note: "SQL/prosedür ismi — SQL'in kendisi değil"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+}
+
+Table tenant_ui_overrides {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  base_component_id uuid [not null, note: "→ ui_components.id"]
+  override_config jsonb [note: "renk, logo, varsayılan görünüm tercihi"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table subscription_plans {
+  id uuid [pk]
+  name varchar(100) [not null, note: "Starter / Growth / Scale"]
+  monthly_token_quota bigint [not null]
+  price_amount numeric(10,2)
+  price_currency varchar(10) [note: "default 'USD'"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+}
+
+Table tenant_token_usage {
+  id uuid [pk]
+  tenant_id uuid [not null, note: "→ tenants.id"]
+  department_id uuid [note: "→ departments.id, NULL = tenant geneli ortak havuz"]
+  period varchar(7) [not null, note: "'YYYY-MM'"]
+  reserved_tokens bigint [note: "default 0; LLM çağrısı başlamadan önce tahmini rezervasyon"]
+  actual_tokens bigint [note: "default 0; LLM cevabı gelince kesinleşen gerçek miktar"]
+  quota_limit bigint [not null, note: "o dönem için geçerli kota — plan sonradan değişse bile sabit kalır"]
+  updated_at timestamptz [note: "default now()"]
+}
+
+Table models {
+  id uuid [pk]
+  provider varchar(50) [not null, note: "default 'bedrock'"]
+  provider_model_id varchar(150) [unique, not null, note: "sağlayıcının ham string ID'si, örn. 'anthropic.claude-sonnet-5'"]
+  display_name varchar(150) [note: "'Claude Sonnet 5' gibi okunaklı isim"]
+  is_active boolean [note: "default true"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+Table llm_model_routing {
+  id uuid [pk]
+  purpose varchar(50) [unique, not null, note: "intent_detection / ui_generation / tool_call"]
+  model_id uuid [not null, note: "→ models.id — önceden ham Bedrock string'iydi, düzeltildi"]
+  fallback_model_id uuid [note: "→ models.id, birincil model hata verirse kullanılacak model"]
+  is_active boolean [note: "default true"]
+  updated_at timestamptz [note: "default now()"]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
+}
+
+Table model_pricing {
+  id uuid [pk]
+  model_id uuid [not null, note: "→ models.id — önceden ham Bedrock string'iydi, düzeltildi"]
+  input_price_per_1k numeric(10,6) [not null]
+  output_price_per_1k numeric(10,6) [not null]
+  effective_date date [not null]
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  created_at timestamptz [note: "default now()"]
+}
+
+// ---- İlişkiler (alan notlarından otomatik çıkarıldı) ----
+Ref: tenants.plan_id > subscription_plans.id
+Ref: departments.tenant_id > tenants.id
+Ref: departments.parent_department_id > departments.id
+Ref: departments.head_user_id > users.id
+Ref: departments.created_by > users.id
+Ref: job_levels.tenant_id > tenants.id
+Ref: job_levels.created_by > users.id
+Ref: roles.tenant_id > tenants.id
+Ref: roles.created_by > users.id
+Ref: users.tenant_id > tenants.id
+Ref: users.department_id > departments.id
+Ref: users.job_level_id > job_levels.id
+Ref: users.role_id > roles.id
+Ref: users.manager_id > users.id
+Ref: roles_permissions.tenant_id > tenants.id
+Ref: roles_permissions.role_id > roles.id
+Ref: custom_field_definitions.tenant_id > tenants.id
+Ref: custom_field_definitions.created_by > users.id
+Ref: activities.tenant_id > tenants.id
+Ref: activities.created_by > users.id
+Ref: attachments.tenant_id > tenants.id
+Ref: attachments.uploaded_by > users.id
+Ref: tasks.tenant_id > tenants.id
+Ref: tasks.assigned_to > users.id
+Ref: tasks.board_column_id > board_columns.id
+Ref: tasks.created_by > users.id
+Ref: tasks.updated_by > users.id
+Ref: tags.tenant_id > tenants.id
+Ref: tags.created_by > users.id
+Ref: taggables.tenant_id > tenants.id
+Ref: taggables.tag_id > tags.id
+Ref: notifications.tenant_id > tenants.id
+Ref: notifications.user_id > users.id
+Ref: companies.tenant_id > tenants.id
+Ref: companies.owner_id > users.id
+Ref: companies.created_by > users.id
+Ref: companies.updated_by > users.id
+Ref: contacts.tenant_id > tenants.id
+Ref: contacts.company_id > companies.id
+Ref: contacts.created_by > users.id
+Ref: contacts.updated_by > users.id
+Ref: addresses.tenant_id > tenants.id
+Ref: addresses.company_id > companies.id
+Ref: addresses.created_by > users.id
+Ref: pipeline_stages.tenant_id > tenants.id
+Ref: pipeline_stages.created_by > users.id
+Ref: deals.tenant_id > tenants.id
+Ref: deals.company_id > companies.id
+Ref: deals.contact_id > contacts.id
+Ref: deals.stage_id > pipeline_stages.id
+Ref: deals.owner_id > users.id
+Ref: deals.created_by > users.id
+Ref: deals.updated_by > users.id
+Ref: projects.tenant_id > tenants.id
+Ref: projects.owner_id > users.id
+Ref: projects.created_by > users.id
+Ref: projects.updated_by > users.id
+Ref: project_members.tenant_id > tenants.id
+Ref: project_members.project_id > projects.id
+Ref: project_members.user_id > users.id
+Ref: boards.tenant_id > tenants.id
+Ref: boards.project_id > projects.id
+Ref: boards.created_by > users.id
+Ref: boards.updated_by > users.id
+Ref: board_columns.tenant_id > tenants.id
+Ref: board_columns.board_id > boards.id
+Ref: board_columns.created_by > users.id
+Ref: calendar_events.tenant_id > tenants.id
+Ref: calendar_events.created_by > users.id
+Ref: calendar_event_attendees.tenant_id > tenants.id
+Ref: calendar_event_attendees.event_id > calendar_events.id
+Ref: calendar_event_attendees.user_id > users.id
+Ref: ai_conversations.tenant_id > tenants.id
+Ref: ai_conversations.user_id > users.id
+Ref: permissions.created_by > users.id
+Ref: role_permissions.tenant_id > tenants.id
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_id > permissions.id
+Ref: role_permissions.granted_by > users.id
+Ref: ui_components.created_by > users.id
+Ref: action_registry.created_by > users.id
+Ref: tool_registry.created_by > users.id
+Ref: tenant_ui_overrides.tenant_id > tenants.id
+Ref: tenant_ui_overrides.base_component_id > ui_components.id
+Ref: tenant_ui_overrides.created_by > users.id
+Ref: subscription_plans.created_by > users.id
+Ref: tenant_token_usage.tenant_id > tenants.id
+Ref: tenant_token_usage.department_id > departments.id
+Ref: models.created_by > users.id
+Ref: llm_model_routing.model_id > models.id
+Ref: llm_model_routing.fallback_model_id > models.id
+Ref: llm_model_routing.created_by > users.id
+Ref: llm_model_routing.updated_by > users.id
+Ref: model_pricing.model_id > models.id
+Ref: model_pricing.created_by > users.id
