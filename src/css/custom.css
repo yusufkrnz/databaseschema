@@ -1,0 +1,127 @@
+/**
+ * Marka renkleri: PostgreSQL mavisi birincil vurgu olarak kullanılıyor.
+ * (Mongo yeşili zaten Docusaurus'un "tip" admonition rengiyle örtüşüyor —
+ * "Neden bu şekilde modellendi" kutuları bu yüzden info/tip karışımı kullanıyor.)
+ */
+:root {
+  --ifm-color-primary: #28688d;
+  --ifm-color-primary-dark: #235d7d;
+  --ifm-color-primary-darker: #205674;
+  --ifm-color-primary-darkest: #1a4760;
+  --ifm-color-primary-light: #2f7aa3;
+  --ifm-color-primary-lighter: #3483ad;
+  --ifm-color-primary-lightest: #3f96c2;
+  --ifm-code-font-size: 92%;
+  --ifm-font-family-base: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #5fa8cb;
+  --ifm-color-primary-dark: #4f96ba;
+  --ifm-color-primary-darker: #4a8fb2;
+  --ifm-color-primary-darkest: #3e7897;
+  --ifm-color-primary-light: #6fb4d4;
+  --ifm-color-primary-lighter: #79bad8;
+  --ifm-color-primary-lightest: #94c9e0;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Tablolardaki backtick alan/tip hücrelerinin taşmasını önle */
+table code {
+  white-space: nowrap;
+}
+
+/* ---------- Tip Karşılığı köprüsü (Postgres ↔ Mongo) ---------- */
+.type-bridge {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1.5rem 0 2rem;
+  background: var(--ifm-background-surface-color);
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+.type-bridge-head {
+  padding: 10px 18px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: var(--ifm-color-emphasis-600);
+  background: var(--ifm-color-emphasis-100);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+.type-bridge-row {
+  display: grid;
+  grid-template-columns: 1fr 34px 1fr;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  font-size: 14px;
+  transition: background 0.1s ease;
+}
+.type-bridge-row:last-child { border-bottom: none; }
+.type-bridge-row:hover { background: var(--ifm-color-emphasis-100); }
+.type-bridge-pg {
+  text-align: right;
+  color: #28688d;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 13px;
+}
+[data-theme='dark'] .type-bridge-pg { color: #7fb4d6; }
+.type-bridge-arrow {
+  text-align: center;
+  color: var(--ifm-color-emphasis-500);
+}
+.type-bridge-mongo {
+  color: #2a8355;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 13px;
+}
+[data-theme='dark'] .type-bridge-mongo { color: #6fcf97; }
+
+/* ---------- Footer — sade, zarif, tema uyumlu ---------- */
+.footer {
+  position: relative;
+  padding: 3rem 0 2rem;
+  background: var(--ifm-color-emphasis-100);
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #28688d 0%, #28688d 50%, #2a8355 50%, #2a8355 100%);
+  opacity: 0.55;
+}
+.footer__title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 0.85rem;
+}
+.footer__link-item {
+  font-size: 13.5px;
+  color: var(--ifm-color-emphasis-700);
+  transition: color 0.12s ease;
+}
+.footer__link-item:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+.footer__col { margin-bottom: 1.75rem; }
+.footer__bottom {
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.footer__copyright {
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-500);
+  letter-spacing: 0.01em;
+}

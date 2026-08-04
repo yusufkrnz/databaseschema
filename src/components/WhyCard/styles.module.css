@@ -1,0 +1,61 @@
+.whyCard {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  padding: 15px 18px 15px 20px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  background: var(--ifm-background-surface-color);
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+.whyCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: #c08a2e;
+}
+
+.whyCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #a3701f;
+  margin-bottom: 11px;
+}
+
+[data-theme='dark'] .whyCardTitle {
+  color: #e0b15c;
+}
+
+.whyCardIcon {
+  font-size: 8px;
+  color: #c08a2e;
+}
+
+.whyCardList {
+  margin: 0;
+  padding-left: 17px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.whyCardList li {
+  margin-bottom: 9px;
+}
+
+.whyCardList li::marker {
+  color: #c08a2e;
+}
+
+.whyCardList li:last-child {
+  margin-bottom: 0;
+}

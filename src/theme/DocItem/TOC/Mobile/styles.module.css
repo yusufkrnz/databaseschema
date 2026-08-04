@@ -1,0 +1,8 @@
+/* Desktop'ta gerçek TOC yerini Desktop wrapper alır (sağ kolon) —
+   bu yüzden Mobile wrapper'ın kendi WhyCard kopyası da aynı breakpoint'te
+   gizlenmeli, yoksa masaüstünde kart iki kez görünür. */
+@media (min-width: 997px) {
+  .whyCardMobileSlot {
+    display: none;
+  }
+}

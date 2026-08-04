@@ -1,0 +1,20 @@
+.remoteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 1rem 0;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(90deg, #2a8355 0%, #28688d 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: var(--ifm-global-shadow-lw);
+  transition: opacity 0.12s ease;
+}
+
+.remoteBtn:hover {
+  opacity: 0.9;
+}
