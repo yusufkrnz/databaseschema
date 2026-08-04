@@ -914,6 +914,17 @@ function buildDbml() {
 
   lines.push("// ---- İlişkiler (alan notlarından otomatik çıkarıldı) ----");
   lines.push(...refs);
+  lines.push("");
+
+  lines.push("// ---- Gruplar — dbdiagram.io/dbdocs.io'da renkli kutular olarak görünür ----");
+  PG_GROUPS.forEach((group) => {
+    const realTables = group.tables.filter((t) => !t.migrated).map((t) => t.id.replace(/-/g, "_"));
+    if (!realTables.length) return;
+    lines.push(`TableGroup "${group.label}" {`);
+    realTables.forEach((name) => lines.push(`  ${name}`));
+    lines.push("}");
+    lines.push("");
+  });
 
   return lines.join("\n") + "\n";
 }

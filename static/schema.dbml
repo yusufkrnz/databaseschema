@@ -579,3 +579,56 @@ Ref: llm_model_routing.created_by > users.id
 Ref: llm_model_routing.updated_by > users.id
 Ref: model_pricing.model_id > models.id
 Ref: model_pricing.created_by > users.id
+
+// ---- Gruplar — dbdiagram.io/dbdocs.io'da renkli kutular olarak görünür ----
+TableGroup "Core — Multi-tenant Çekirdek" {
+  tenants
+  departments
+  job_levels
+  roles
+  users
+  roles_permissions
+  custom_field_definitions
+  activities
+  attachments
+  tasks
+  tags
+  taggables
+  notifications
+}
+
+TableGroup "CRM" {
+  companies
+  contacts
+  addresses
+  pipeline_stages
+  deals
+}
+
+TableGroup "ERP / İç Operasyon" {
+  projects
+  project_members
+  boards
+  board_columns
+  calendar_events
+  calendar_event_attendees
+}
+
+TableGroup "AI Katalog" {
+  ai_conversations
+}
+
+TableGroup "Platform & Yetkilendirme" {
+  permissions
+  role_permissions
+  ui_components
+  action_registry
+  tool_registry
+  tenant_ui_overrides
+  subscription_plans
+  tenant_token_usage
+  models
+  llm_model_routing
+  model_pricing
+}
+

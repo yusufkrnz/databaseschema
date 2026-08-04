@@ -36,6 +36,25 @@ Bir konuşma teorik olarak binlerce mesaj içerebilir. Bunu tek belgede sınırs
 
 ## Koleksiyonlara Genel Bakış
 
+DBML/dbdiagram.io ilişkisel bir araç — MongoDB'nin doküman yapısını ifade edemiyor. Onun yerine aynı "renkli, modele göre gruplu" görseli kendi diyagramımızda veriyoruz:
+
+```mermaid
+flowchart TB
+  classDef reference fill:#E7F0F5,stroke:#28688d,color:#1a4760
+  classDef embed fill:#E6F4EB,stroke:#2a8355,color:#1a4d33
+  classDef append fill:#FBEBD3,stroke:#c08a2e,color:#7a5418
+  classDef coexist fill:#F1E9FA,stroke:#6b3fa0,color:#442868
+
+  AC["ai_conversations\nReference (metadata)"]:::reference
+  AMB["ai_message_buckets\nEmbed + Bucket Pattern"]:::embed
+  AL["audit_log\nAppend-only, TTL"]:::append
+  ACT["activities\nCoexistence (alternatif)"]:::coexist
+  CFV["custom_field_values\nCoexistence, EAV"]:::coexist
+  LCL["llm_call_log\nAppend-only"]:::append
+
+  AC -- "conversation_id" --> AMB
+```
+
 | Koleksiyon | Model | Postgres ile ilişkisi |
 |---|---|---|
 | [ai_conversations](/mongodb/ai-conversations) | Reference (metadata) | Postgres'teki thin tabloyla id paylaşır |

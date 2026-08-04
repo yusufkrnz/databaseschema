@@ -83,14 +83,19 @@ Mongo tarafında koleksiyonların çoğu **birbirine referans vermez** — her b
 
 ```mermaid
 flowchart LR
-  AC["ai_conversations\n(metadata)"] -- "conversation_id" --> AMB["ai_message_buckets\n(bucket_seq sırayla)"]
+  classDef reference fill:#E7F0F5,stroke:#28688d,color:#1a4760
+  classDef embed fill:#E6F4EB,stroke:#2a8355,color:#1a4d33
+  classDef append fill:#FBEBD3,stroke:#c08a2e,color:#7a5418
+  classDef coexist fill:#F1E9FA,stroke:#6b3fa0,color:#442868
+
+  AC["ai_conversations\n(metadata)"]:::reference -- "conversation_id" --> AMB["ai_message_buckets\n(bucket_seq sırayla)"]:::embed
 
   subgraph independent[" "]
     direction TB
-    AL["audit_log"]
-    ACT["activities"]
-    CFV["custom_field_values"]
-    LCL["llm_call_log"]
+    AL["audit_log"]:::append
+    ACT["activities"]:::coexist
+    CFV["custom_field_values"]:::coexist
+    LCL["llm_call_log"]:::append
   end
 ```
 
