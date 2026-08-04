@@ -74,6 +74,8 @@ Table users {
   locale varchar(10) [note: "default 'tr-TR'"]
   last_login_at timestamptz
   display_prefs jsonb
+  created_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi (audit/hesap verebilirlik)"]
+  updated_by uuid [note: "(YENİ) → users.id — genel revizyonda eklendi"]
   created_at timestamptz [note: "default now()"]
   updated_at timestamptz [note: "default now()"]
 }
@@ -494,6 +496,8 @@ Ref: users.department_id > departments.id
 Ref: users.job_level_id > job_levels.id
 Ref: users.role_id > roles.id
 Ref: users.manager_id > users.id
+Ref: users.created_by > users.id
+Ref: users.updated_by > users.id
 Ref: roles_permissions.tenant_id > tenants.id
 Ref: roles_permissions.role_id > roles.id
 Ref: custom_field_definitions.tenant_id > tenants.id

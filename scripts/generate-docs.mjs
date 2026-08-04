@@ -227,6 +227,10 @@ const PG_GROUPS = [
           { n: "updated_at", t: "timestamptz", no: "default now()" },
         ],
         idx: ["(tenant_id, email) — UNIQUE", "(tenant_id, department_id)", "(tenant_id, manager_id)"],
+        why: [
+          "Engellenen edge case — 'kim davet etti' bilgisinin kaybolması: status alanı zaten 'invited' değerini taşıyor, yani bir kullanıcı başka biri tarafından davet ediliyor — ama created_by olmadan bu davetin kim tarafından yapıldığı hiçbir yerde tutulmuyordu. created_by (kendine referans, manager_id ile aynı desende) bunu kapatıyor.",
+          "updated_by, bir kullanıcının rolünü/departmanını kim değiştirdiğini (kendisi mi, bir admin mi) ayırt etmek için gerekli — audit_log'a gitmeden hızlı bir 'son kim dokundu' cevabı verir.",
+        ],
       },
       {
         id: "roles_permissions", position: 6,
@@ -821,6 +825,7 @@ const PG_GROUPS = [
      is_active zaten yeterli, ayrıca deleted_at eklemiyoruz).
 */
 const AUDIT_FIELD_TABLES = new Set([
+  "users",
   "departments", "job_levels", "roles", "custom_field_definitions", "tasks", "tags",
   "companies", "contacts", "addresses", "pipeline-stages", "deals",
   "projects", "boards", "board-columns",
