@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: ai_conversations
-why: ["Konuşma listesi ekranı (sol panel: 'son konuşmalarım') sadece başlık + son mesaj zamanını okur; mesaj gövdesini her seferinde taşımak bu sorguyu gereksiz yere ağırlaştırır.","message_count ve last_bucket_seq alanları sayesinde uygulama, yeni mesaj eklerken hangi bucket'a yazacağına (ya da yeni bucket mı açacağına) tek bu belgeye bakarak karar verir.","Postgres'teki thin `ai_conversations` tablosuyla birebir aynı id'yi taşır — iki taraf arasındaki tek bağ budur, cross-database FK yoktur."]
+why: ["Konuşma listesi ekranı (sol panel: 'son konuşmalarım') sadece başlık + son mesaj zamanını okur; mesaj gövdesini her seferinde taşımak bu sorguyu gereksiz yere ağırlaştırır — bu yüzden metadata ayrı, küçük bir belgede.","message_count ve last_bucket_seq alanları sayesinde uygulama, yeni mesaj eklerken hangi bucket'a yazacağına (ya da yeni bucket mı açacağına) tek bu belgeye bakarak karar verir.","Engellenen edge case — iki kaynağın senkron kalması sorunu: Postgres'te de bir thin ai_conversations tablosu tutulmuştu ama neredeyse aynı alanları taşıyordu (id, tenant_id, user_id, title, timestamps) — biri güncellenip diğeri unutulursa sessizce tutarsızlaşırdı. Tek koleksiyona indirgemek bu riski tamamen ortadan kaldırıyor."]
 ---
 
 import CopyCodeButton from '@site/src/components/CopyCodeButton';
@@ -10,7 +10,7 @@ import CopyCodeButton from '@site/src/components/CopyCodeButton';
 
 `MONGODB` · REFERENCE — mesaj gövdesinden ayrık, sabit boyutlu belge
 
-AI konuşmasının Mongo tarafındaki metadata belgesi — sadece liste ekranını beslemek için var, mesaj içeriği taşımaz. Postgres'teki `ai_conversations` ile aynı id'yi paylaşır (uygulama seviyesinde eşleşir, DB seviyesinde FK yoktur).
+AI konuşmasının **tek kaynağı** — hem metadata (başlık, zaman damgaları, arşiv durumu) hem tenant/user ilişkisi burada. Mesaj gövdesi burada YOK, ayrı bir koleksiyonda (bkz. [ai_message_buckets](/mongodb/ai-message-buckets)). Önceki revizyonda bu metadata Postgres'te de (thin bir tabloda) tekrar ediliyordu — iki DB'de aynı alanları birebir tutmak sahte bir 'iki kaynak' ayrımı yaratıyordu; kaldırıldı, tek sahibi Mongo.
 
 _"Neden bu şekilde tasarlandı" gerekçeleri sağdaki (mobilde başlığın altındaki) bilgi kartında._
 

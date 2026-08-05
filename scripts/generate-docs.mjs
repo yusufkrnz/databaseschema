@@ -578,36 +578,6 @@ const PG_GROUPS = [
     ],
   },
   {
-    dir: "ai", label: "AI Katalog", position: 5,
-    tables: [
-      {
-        id: "ai-conversations", position: 1, displayName: "ai_conversations",
-        note: "AI konuşmasının Postgres tarafındaki ince (thin) kaydı. Mesaj gövdesi burada YOK — tamamen MongoDB'de tutulur (bkz. [MongoDB → ai_message_buckets](/mongodb/ai-message-buckets)). Bu tablo yalnızca tenant/user FK bütünlüğünü ve 'kullanıcının konuşma listesi' gibi hızlı JOIN'li ekranları besler.",
-        fields: [
-          { n: "id", t: "uuid", f: ["PK"], no: "Mongo tarafında conversation_id olarak referans alınır (app-level, DB FK değil)" },
-          { n: "tenant_id", t: "uuid", f: ["FK", "NN"], no: "→ tenants.id" },
-          { n: "user_id", t: "uuid", f: ["FK", "NN"], no: "→ users.id" },
-          { n: "title", t: "varchar(255)" },
-          { n: "started_at", t: "timestamptz", no: "default now()" },
-          { n: "last_message_at", t: "timestamptz" },
-          { n: "is_archived", t: "boolean", no: "default false" },
-          { n: "message_count", t: "int", f: ["new"], no: "Mongo'daki mesaj sayısının senkron kopyası — liste ekranı Mongo'ya gitmeden çalışsın diye" },
-        ],
-        idx: ["(tenant_id, user_id, last_message_at)"],
-      },
-      {
-        id: "ai-messages-family", position: 2, migrated: true,
-        displayName: "ai_messages, ai_message_tool_calls, ai_message_ui_widgets",
-        note: "Bu üç tablo tamamen MongoDB'ye taşındı ve tek bir koleksiyona (`ai_message_buckets`) konsolide edildi. Gerekçe: mesajlar her zaman sırayla ve birlikte okunuyor, nadiren tek başına JOIN ile sorgulanıyor — klasik 'gömme' (embedding) senaryosu. Sınırsız büyüyebilecekleri için düz embed yerine Bucket Pattern kullanıldı (bkz. [MongoDB → Modelleme İlkeleri](/mongodb/principles)).",
-        mongoRef: "/mongodb/ai-message-buckets", mongoLabel: "ai_message_buckets koleksiyonuna git",
-        why: [
-          "3 ayrı tabloyu JOIN ile birleştirmek yerine, zaten hep birlikte okunan veriyi tek belgede toplamak sorguyu basitleştiriyor.",
-          "Bir konuşma sınırsız büyüyebileceği için düz embed yerine Bucket Pattern (≤50 mesaj/belge) kullanıldı — 16MB BSON limitine karşı önlem.",
-        ],
-      },
-    ],
-  },
-  {
     dir: "platform", label: "Platform & Yetkilendirme", position: 6,
     tables: [
       {
@@ -938,12 +908,12 @@ writeDoc(join(__dirname, "..", "static", "schema.dbml"), buildDbml());
 const MONGO_COLLECTIONS = [
   {
     id: "ai-conversations", displayName: "ai_conversations", position: 2,
-    note: "AI konuşmasının Mongo tarafındaki metadata belgesi — sadece liste ekranını beslemek için var, mesaj içeriği taşımaz. Postgres'teki `ai_conversations` ile aynı id'yi paylaşır (uygulama seviyesinde eşleşir, DB seviyesinde FK yoktur).",
+    note: "AI konuşmasının **tek kaynağı** — hem metadata (başlık, zaman damgaları, arşiv durumu) hem tenant/user ilişkisi burada. Mesaj gövdesi burada YOK, ayrı bir koleksiyonda (bkz. [ai_message_buckets](/mongodb/ai-message-buckets)). Önceki revizyonda bu metadata Postgres'te de (thin bir tabloda) tekrar ediliyordu — iki DB'de aynı alanları birebir tutmak sahte bir 'iki kaynak' ayrımı yaratıyordu; kaldırıldı, tek sahibi Mongo.",
     model: "REFERENCE — mesaj gövdesinden ayrık, sabit boyutlu belge",
     why: [
-      "Konuşma listesi ekranı (sol panel: 'son konuşmalarım') sadece başlık + son mesaj zamanını okur; mesaj gövdesini her seferinde taşımak bu sorguyu gereksiz yere ağırlaştırır.",
+      "Konuşma listesi ekranı (sol panel: 'son konuşmalarım') sadece başlık + son mesaj zamanını okur; mesaj gövdesini her seferinde taşımak bu sorguyu gereksiz yere ağırlaştırır — bu yüzden metadata ayrı, küçük bir belgede.",
       "message_count ve last_bucket_seq alanları sayesinde uygulama, yeni mesaj eklerken hangi bucket'a yazacağına (ya da yeni bucket mı açacağına) tek bu belgeye bakarak karar verir.",
-      "Postgres'teki thin `ai_conversations` tablosuyla birebir aynı id'yi taşır — iki taraf arasındaki tek bağ budur, cross-database FK yoktur.",
+      "Engellenen edge case — iki kaynağın senkron kalması sorunu: Postgres'te de bir thin ai_conversations tablosu tutulmuştu ama neredeyse aynı alanları taşıyordu (id, tenant_id, user_id, title, timestamps) — biri güncellenip diğeri unutulursa sessizce tutarsızlaşırdı. Tek koleksiyona indirgemek bu riski tamamen ortadan kaldırıyor.",
     ],
     schemaFields: [
       { n: "_id", t: "ObjectId" },
@@ -1012,7 +982,7 @@ const MONGO_COLLECTIONS = [
     ],
     schemaFields: [
       { n: "_id", t: "ObjectId" },
-      { n: "conversation_id", t: "string (uuid)", no: "→ Postgres ai_conversations.id (app-level referans)" },
+      { n: "conversation_id", t: "string (uuid)", no: "→ ai_conversations._id (Mongo-içi referans, aynı veritabanında ayrı koleksiyon)" },
       { n: "tenant_id", t: "string (uuid)" },
       { n: "bucket_seq", t: "int", no: "0'dan başlar, her yeni bucket +1" },
       { n: "first_seq", t: "int", no: "bu bucket'taki ilk mesajın global sırası" },

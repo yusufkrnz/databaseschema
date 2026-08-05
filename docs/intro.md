@@ -8,7 +8,7 @@ slug: /intro
 
 AI-First CRM + ERP platformu iki veritabanı üzerine kurulu: çekirdek tenant/CRM/ERP verisi için **PostgreSQL**, esnek ve hızlı büyüyen AI konuşma/log verisi için **MongoDB**. Bu doküman her iki tarafın da tam şema referansını, gerekçeleriyle birlikte içerir.
 
-**36** Postgres tablosu · **6** Mongo koleksiyonu · **4** tablo MongoDB'ye taşındı
+**35** Postgres tablosu · **6** Mongo koleksiyonu · **5** tablo MongoDB'ye taşındı
 
 ## PostgreSQL nerede kullanılır
 
@@ -29,12 +29,11 @@ flowchart LR
     T["tenants / users"]
     C["companies · contacts · deals"]
     P["projects · boards · tasks"]
-    AC["ai_conversations (thin)"]
   end
 
   subgraph MG["MongoDB — esnek / hızlı büyüyen"]
     direction TB
-    M1["ai_conversations (metadata)"]
+    M1["ai_conversations (tek kaynak)"]
     M2["ai_message_buckets"]
     M3["audit_log"]
     M4["activities (alternatif)"]
@@ -42,8 +41,8 @@ flowchart LR
     M6["llm_call_log"]
   end
 
-  AC -- "id = conversation_id, app-level" --> M1
   M1 -- "conversation_id + bucket_seq" --> M2
+  T -. "tenant_id / user_id kopyalanır" .-> M1
   T -. "tenant_id / user_id kopyalanır" .-> M3
   C -. "entity_type + entity_id" .-> M4
   C -. "entity_type + entity_id" .-> M5
@@ -111,13 +110,14 @@ Dinamik UI/fonksiyon kataloğu (`ui_components`, `action_registry`, `tool_regist
 - **Yeni: `llm_call_log` (Mongo)** — her mini/ana LLM çağrısının ham kaydı, tenant maliyet raporlamasının kaynağı.
 - **Düzeltme: isim yerine id ile eşleştirme.** `permissions.catalog_item_name` → `catalog_item_id`; `llm_model_routing`/`model_pricing`'in ham Bedrock string'ine (`model_id` varchar) referans vermesi yerine yeni `models` kataloğuna (`model_id` uuid FK) bağlandı. İkisi de aynı sınıf hatayı çözüyor: sağlayıcı/katalog ismi değişirse referans sessizce kopmasın diye.
 - **Yeni: `created_by`/`updated_by`/`deleted_at`.** 22 tabloya (bridge tablolar ve zaten eşdeğeri olanlar hariç) audit alanları, 10 çekirdek iş kaydı tablosuna (companies, contacts, deals, projects, tasks…) soft-delete eklendi.
+- **Kaldırıldı: Postgres'teki "AI Katalog" grubu.** `ai_conversations`, Mongo'daki metadata belgesiyle neredeyse birebir aynı alanları taşıyordu — iki DB'de aynı veriyi tutmak sahte bir "iki kaynak" riskiydi. Artık tek sahibi Mongo.
 :::
 
 ## Nereden başlamalı
 
 - **[İlişkiler](/relationships)** — Postgres içi, Postgres↔Mongo köprüsü ve Mongo içi ilişkiler tek sayfada
-- **[PostgreSQL İlişki Diyagramı](/postgres/erd)** — 36 tablonun tam ERD'si
+- **[PostgreSQL İlişki Diyagramı](/postgres/erd)** — 35 tablonun tam ERD'si
 - **[MongoDB Modelleme İlkeleri](/mongodb/principles)** — embed/reference/bucket kararları nasıl verildi
 - **[Platform & Yetkilendirme](/postgres/platform/permissions)** — RBAC, dinamik UI/fonksiyon/tool kataloğu, token/kota takibi
 - **[Mimari İlkeler](/architecture/security)** — Güvenlik, Maliyet, Performans, Güvenilirlik: şemaya dağılmış kararların çapraz-kesen özeti + henüz çözülmemiş açık konular
-- Sol menüden Core → CRM → ERP → AI Katalog → Platform & Yetkilendirme sırasıyla Postgres tablolarını, MongoDB bölümünden de 6 koleksiyonu tek tek inceleyebilirsiniz.
+- Sol menüden Core → CRM → ERP → Platform & Yetkilendirme sırasıyla Postgres tablolarını, MongoDB bölümünden de 6 koleksiyonu tek tek inceleyebilirsiniz.

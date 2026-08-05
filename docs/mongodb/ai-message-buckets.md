@@ -23,7 +23,7 @@ Kopyaladığınızı Compass'ın veya Atlas Data Explorer'ın gömülü mongosh 
 | Alan | Tip | Kısıtlar | Not |
 |---|---|---|---|
 | `_id` | `ObjectId` |  |  |
-| `conversation_id` | `string (uuid)` |  | → Postgres ai_conversations.id (app-level referans) |
+| `conversation_id` | `string (uuid)` |  | → ai_conversations._id (Mongo-içi referans, aynı veritabanında ayrı koleksiyon) |
 | `tenant_id` | `string (uuid)` |  |  |
 | `bucket_seq` | `int` |  | 0'dan başlar, her yeni bucket +1 |
 | `first_seq` | `int` |  | bu bucket'taki ilk mesajın global sırası |

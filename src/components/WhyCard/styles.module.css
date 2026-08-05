@@ -2,9 +2,9 @@
   position: relative;
   overflow: hidden;
   margin-top: 1.25rem;
-  padding: 15px 18px 15px 20px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 10px;
+  padding: 0.9375rem 1.125rem 0.9375rem 1.25rem;
+  border: 0.0625rem solid var(--ifm-color-emphasis-300);
+  border-radius: 0.625rem;
   background: var(--ifm-background-surface-color);
   box-shadow: var(--ifm-global-shadow-lw);
 }
@@ -15,20 +15,20 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 3px;
+  width: 0.1875rem;
   background: #c08a2e;
 }
 
 .whyCardTitle {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11px;
+  gap: 0.4375rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
   color: #a3701f;
-  margin-bottom: 11px;
+  margin-bottom: 0.6875rem;
 }
 
 [data-theme='dark'] .whyCardTitle {
@@ -36,20 +36,20 @@
 }
 
 .whyCardIcon {
-  font-size: 8px;
+  font-size: 0.5rem;
   color: #c08a2e;
 }
 
 .whyCardList {
   margin: 0;
-  padding-left: 17px;
-  font-size: 13px;
+  padding-left: 1.0625rem;
+  font-size: 0.8125rem;
   line-height: 1.65;
   color: var(--ifm-color-emphasis-800);
 }
 
 .whyCardList li {
-  margin-bottom: 9px;
+  margin-bottom: 0.5625rem;
 }
 
 .whyCardList li::marker {

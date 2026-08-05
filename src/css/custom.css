@@ -2,6 +2,9 @@
  * Marka renkleri: PostgreSQL mavisi birincil vurgu olarak kullanılıyor.
  * (Mongo yeşili zaten Docusaurus'un "tip" admonition rengiyle örtüşüyor —
  * "Neden bu şekilde modellendi" kutuları bu yüzden info/tip karışımı kullanıyor.)
+ *
+ * Not: tüm boyutlar (font, spacing, border) rem cinsinden — kullanıcının
+ * tarayıcı font boyutu tercihine göre ölçeklensin diye, px'e sabitlenmiyor.
  */
 :root {
   --ifm-color-primary: #28688d;
@@ -27,37 +30,86 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
+/* ============================================================
+   AKIŞKAN (FLUID) RESPONSIVE — px sabiti / ani breakpoint zıplaması yok
+   ============================================================
+   Infima varsayılanı: içerik genişliği 996px altı %100, sonra 1140px'te
+   sabitlenir, 1440px'te 1320px'e "zıplar" ve orada kilitlenir — yani 2K
+   (2560px) ve 4K (3840px) ekranlar AYNI 1320px'i görür, aralarında hiç
+   fark yoktur. Bunun yerine üç kademeyi de clamp() ile sürekli/orantılı
+   hale getiriyoruz: her viewport genişliği kendi ara değerini alır.
+
+   1) html font-size: rem tabanlı HER ŞEYİ (bu proje boyunca px'ten rem'e
+      çevirdiğimiz tüm bileşenler dahil) tek noktadan, birlikte ölçekler.
+   2) .container max-width: ana içerik + sağ TOC kolonunun (yüzdelik
+      olduğu için otomatik orantılanır) toplam genişliği.
+   3) --doc-sidebar-width: sol nav — bilinçli olarak DAHA DAR bir aralıkta
+      büyür (300px→~416px) ve orada kilitlenir; bir menü etiketinin
+      okunabilirliği için yeterli genişlik yeter, 4K'da devasa bir boş
+      nav sütunu anlamsız olurdu. Okuma içeriği büyümeye devam ederken
+      UI çerçevesinin (nav, buton) sınırlı büyümesi kasıtlı bir ayrım.
+*/
+html {
+  font-size: clamp(15px, 0.1667vw + 13.6px, 20px);
+}
+
+.container {
+  max-width: clamp(50rem, 49vw + 32rem, 150rem) !important;
+}
+
+:root {
+  --doc-sidebar-width: clamp(18.75rem, 12vw + 12rem, 26rem);
+}
+
 /* Tablolardaki backtick alan/tip hücrelerinin taşmasını önle */
 table code {
   white-space: nowrap;
 }
 
+/* ---------- Arama kutusu — varsayılandan (12.5rem) daha geniş ---------- */
+.navbar__search {
+  margin-left: 1.25rem;
+}
+.navbar__search-input {
+  width: 22rem;
+  max-width: 30vw;
+  height: 2.35rem;
+  font-size: 0.875rem;
+  border: 0.0625rem solid var(--ifm-color-emphasis-300);
+}
+@media (max-width: 996px) {
+  .navbar__search-input {
+    width: 12rem;
+    max-width: 40vw;
+  }
+}
+
 /* ---------- Tip Karşılığı köprüsü (Postgres ↔ Mongo) ---------- */
 .type-bridge {
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 10px;
+  border: 0.0625rem solid var(--ifm-color-emphasis-300);
+  border-radius: 0.625rem;
   overflow: hidden;
   margin: 1.5rem 0 2rem;
   background: var(--ifm-background-surface-color);
   box-shadow: var(--ifm-global-shadow-lw);
 }
 .type-bridge-head {
-  padding: 10px 18px;
-  font-size: 11.5px;
+  padding: 0.625rem 1.125rem;
+  font-size: 0.71875rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   font-weight: 700;
   color: var(--ifm-color-emphasis-600);
   background: var(--ifm-color-emphasis-100);
-  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  border-bottom: 0.0625rem solid var(--ifm-color-emphasis-300);
 }
 .type-bridge-row {
   display: grid;
-  grid-template-columns: 1fr 34px 1fr;
+  grid-template-columns: 1fr 2.125rem 1fr;
   align-items: center;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--ifm-color-emphasis-200);
-  font-size: 14px;
+  padding: 0.625rem 1.125rem;
+  border-bottom: 0.0625rem solid var(--ifm-color-emphasis-200);
+  font-size: 0.875rem;
   transition: background 0.1s ease;
 }
 .type-bridge-row:last-child { border-bottom: none; }
@@ -66,7 +118,7 @@ table code {
   text-align: right;
   color: #28688d;
   font-family: var(--ifm-font-family-monospace);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 [data-theme='dark'] .type-bridge-pg { color: #7fb4d6; }
 .type-bridge-arrow {
@@ -76,7 +128,7 @@ table code {
 .type-bridge-mongo {
   color: #2a8355;
   font-family: var(--ifm-font-family-monospace);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 [data-theme='dark'] .type-bridge-mongo { color: #6fcf97; }
 
@@ -85,20 +137,20 @@ table code {
   position: relative;
   padding: 3rem 0 2rem;
   background: var(--ifm-color-emphasis-100);
-  border-top: 1px solid var(--ifm-color-emphasis-200);
+  border-top: 0.0625rem solid var(--ifm-color-emphasis-200);
 }
 .footer::before {
   content: '';
   position: absolute;
-  top: -1px;
+  top: -0.0625rem;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 0.125rem;
   background: linear-gradient(90deg, #28688d 0%, #28688d 50%, #2a8355 50%, #2a8355 100%);
   opacity: 0.55;
 }
 .footer__title {
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-weight: 600;
@@ -106,7 +158,7 @@ table code {
   margin-bottom: 0.85rem;
 }
 .footer__link-item {
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   color: var(--ifm-color-emphasis-700);
   transition: color 0.12s ease;
 }
@@ -118,10 +170,10 @@ table code {
 .footer__bottom {
   margin-top: 1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--ifm-color-emphasis-200);
+  border-top: 0.0625rem solid var(--ifm-color-emphasis-200);
 }
 .footer__copyright {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--ifm-color-emphasis-500);
   letter-spacing: 0.01em;
 }

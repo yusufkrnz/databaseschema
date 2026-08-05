@@ -355,17 +355,6 @@ Table calendar_event_attendees {
   rsvp_status varchar(20) [note: "default 'pending'"]
 }
 
-Table ai_conversations {
-  id uuid [pk, note: "Mongo tarafında conversation_id olarak referans alınır (app-level, DB FK değil)"]
-  tenant_id uuid [not null, note: "→ tenants.id"]
-  user_id uuid [not null, note: "→ users.id"]
-  title varchar(255)
-  started_at timestamptz [note: "default now()"]
-  last_message_at timestamptz
-  is_archived boolean [note: "default false"]
-  message_count int [note: "(YENİ) Mongo'daki mesaj sayısının senkron kopyası — liste ekranı Mongo'ya gitmeden çalışsın diye"]
-}
-
 Table permissions {
   id uuid [pk]
   catalog_type varchar(20) [not null, note: "'ui' | 'function' | 'tool' — catalog_item_id hangi tabloda aranacak, bunu belirler"]
@@ -556,8 +545,6 @@ Ref: calendar_events.created_by > users.id
 Ref: calendar_event_attendees.tenant_id > tenants.id
 Ref: calendar_event_attendees.event_id > calendar_events.id
 Ref: calendar_event_attendees.user_id > users.id
-Ref: ai_conversations.tenant_id > tenants.id
-Ref: ai_conversations.user_id > users.id
 Ref: permissions.created_by > users.id
 Ref: role_permissions.tenant_id > tenants.id
 Ref: role_permissions.role_id > roles.id
@@ -612,10 +599,6 @@ TableGroup "ERP / İç Operasyon" {
   board_columns
   calendar_events
   calendar_event_attendees
-}
-
-TableGroup "AI Katalog" {
-  ai_conversations
 }
 
 TableGroup "Platform & Yetkilendirme" {

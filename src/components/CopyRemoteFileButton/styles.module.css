@@ -1,15 +1,15 @@
 .remoteBtn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   margin: 1rem 0;
-  padding: 11px 18px;
-  font-size: 14px;
+  padding: 0.6875rem 1.125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #fff;
   background: linear-gradient(90deg, #2a8355 0%, #28688d 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   cursor: pointer;
   box-shadow: var(--ifm-global-shadow-lw);
   transition: opacity 0.12s ease;

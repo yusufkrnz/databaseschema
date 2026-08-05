@@ -13,7 +13,7 @@ import CopyRemoteFileButton from '@site/src/components/CopyRemoteFileButton';
 
 ## 1. PostgreSQL İçi İlişkiler
 
-36 tablonun tamamı, foreign key ilişkileriyle. Ayrıntılı sürüm ve DBML export için [PostgreSQL İlişki Diyagramı](/postgres/erd) sayfasına bakın.
+35 tablonun tamamı, foreign key ilişkileriyle. Ayrıntılı sürüm ve DBML export için [PostgreSQL İlişki Diyagramı](/postgres/erd) sayfasına bakın.
 
 <OpenInDbdiagram />
 
@@ -31,7 +31,6 @@ erDiagram
   projects ||--o{ boards : has
   boards ||--o{ board_columns : has
   board_columns ||--o{ tasks : contains
-  tenants ||--o{ ai_conversations : has
   roles ||--o{ role_permissions : granted_via
   permissions ||--o{ role_permissions : defines
   subscription_plans ||--o{ tenants : subscribes
@@ -52,12 +51,11 @@ flowchart LR
     direction TB
     T["tenants / users"]
     C["companies · contacts · deals"]
-    AC["ai_conversations (thin)"]
   end
 
   subgraph MG["MongoDB — esnek / hızlı büyüyen"]
     direction TB
-    M1["ai_conversations (metadata)"]
+    M1["ai_conversations (tek kaynak)"]
     M2["ai_message_buckets"]
     M3["audit_log"]
     M4["activities (alternatif)"]
@@ -65,8 +63,8 @@ flowchart LR
     M6["llm_call_log"]
   end
 
-  AC -- "id = conversation_id, app-level" --> M1
   M1 -- "conversation_id + bucket_seq" --> M2
+  T -. "tenant_id / user_id kopyalanır" .-> M1
   T -. "tenant_id / user_id kopyalanır" .-> M3
   C -. "entity_type + entity_id" .-> M4
   C -. "entity_type + entity_id" .-> M5
@@ -88,7 +86,7 @@ flowchart LR
   classDef append fill:#FBEBD3,stroke:#c08a2e,color:#7a5418
   classDef coexist fill:#F1E9FA,stroke:#6b3fa0,color:#442868
 
-  AC["ai_conversations\n(metadata)"]:::reference -- "conversation_id" --> AMB["ai_message_buckets\n(bucket_seq sırayla)"]:::embed
+  AC["ai_conversations\n(tek kaynak, metadata)"]:::reference -- "conversation_id" --> AMB["ai_message_buckets\n(bucket_seq sırayla)"]:::embed
 
   subgraph independent[" "]
     direction TB

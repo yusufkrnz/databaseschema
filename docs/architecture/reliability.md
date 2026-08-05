@@ -13,7 +13,7 @@ Bir deal'i Postgres'te güncelleyip aynı anda Mongo'da bir activity oluşturmak
 
 ## 2. Foreign key enforcement yok
 
-Mongo belgelerindeki `tenant_id`, `conversation_id` gibi referanslar veritabanı seviyesinde zorlanmıyor, sadece uygulama kodu ve `$jsonSchema` validasyonu ile korunuyor. `ai_conversations` (Postgres, thin) ile `ai_message_buckets.conversation_id` (Mongo) arasındaki bağ tamamen **uygulama seviyesinde** — id eşleşmesi, DB FK'sı değil.
+Mongo belgelerindeki `tenant_id`, `conversation_id` gibi referanslar veritabanı seviyesinde zorlanmıyor, sadece uygulama kodu ve `$jsonSchema` validasyonu ile korunuyor. `ai_conversations._id` ile `ai_message_buckets.conversation_id` arasındaki bağ bile — ikisi de Mongo'da olsa dahi — bir DB-seviyesi FK değil, sadece uygulama seviyesinde tutarlı tutulan bir referans.
 
 → Detaylar: [Polyglot Mimari diyagramı](/intro#polyglot-mimari--veri-nereye-yazılır)
 
@@ -35,5 +35,5 @@ Birincil Bedrock modeli hata verip `fallback_model_id`'ye düşüldüğünde bu 
 
 :::warning Henüz çözülmedi
 - Mongo'daki "arka plan temizlik job'ı" (tenant silme sonrası) henüz tasarlanmadı — hangi sıklıkta çalışacak, hata durumunda nasıl retry edecek belirsiz.
-- Postgres ↔ Mongo arasında düzenli bir tutarlılık denetimi (örn. "her ai_conversations.id'nin Mongo'da karşılığı var mı") henüz bir mekanizmaya bağlanmadı.
+- Postgres ↔ Mongo arasında düzenli bir tutarlılık denetimi (örn. "her `companies.id`'ye ait activity kaydı gerçekten var mı") henüz bir mekanizmaya bağlanmadı.
 :::

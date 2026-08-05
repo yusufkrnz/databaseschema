@@ -37,6 +37,21 @@ const config: Config = {
     },
   },
   themes: ['@docusaurus/theme-mermaid'],
+  plugins: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: true,
+        language: ['tr', 'en'],
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+        docsRouteBasePath: '/',
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+      },
+    ],
+  ],
 
   presets: [
     [
@@ -105,7 +120,6 @@ const config: Config = {
             {label: 'Core — Multi-tenant Çekirdek', to: '/postgres/core/tenants'},
             {label: 'CRM', to: '/postgres/crm/companies'},
             {label: 'ERP / İç Operasyon', to: '/postgres/erp/projects'},
-            {label: 'AI Katalog', to: '/postgres/ai/ai-conversations'},
             {label: 'Platform & Yetkilendirme', to: '/postgres/platform/permissions'},
           ],
         },
@@ -134,7 +148,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `AI-First CRM + ERP · Şema Referansı — PostgreSQL 36 tablo, MongoDB 6 koleksiyon · ${new Date().getFullYear()}`,
+      copyright: `AI-First CRM + ERP · Şema Referansı — PostgreSQL 35 tablo, MongoDB 6 koleksiyon · ${new Date().getFullYear()}`,
     },
     prism: {
       theme: prismThemes.github,

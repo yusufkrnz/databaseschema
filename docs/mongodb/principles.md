@@ -57,7 +57,7 @@ flowchart TB
 
 | Koleksiyon | Model | Postgres ile ilişkisi |
 |---|---|---|
-| [ai_conversations](/mongodb/ai-conversations) | Reference (metadata) | Postgres'teki thin tabloyla id paylaşır |
+| [ai_conversations](/mongodb/ai-conversations) | Reference (metadata) | Postgres'te karşılığı yok — tek kaynak Mongo |
 | [ai_message_buckets](/mongodb/ai-message-buckets) | Embed + Bucket Pattern | Postgres'ten tamamen taşındı |
 | [audit_log](/mongodb/audit-log) | Append-only, TTL | Postgres'ten tamamen taşındı |
 | [activities](/mongodb/activities) | Coexistence (alternatif) | Postgres'teki `activities` ile paralel, opsiyonel |
