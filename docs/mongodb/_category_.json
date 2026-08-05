@@ -1,5 +1,8 @@
 {
   "label": "MongoDB",
   "position": 3,
-  "collapsed": false
+  "collapsed": true,
+  "customProps": {
+    "icon": "/img/icon-mongodb.svg"
+  }
 }

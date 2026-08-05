@@ -43,11 +43,10 @@
       çevirdiğimiz tüm bileşenler dahil) tek noktadan, birlikte ölçekler.
    2) .container max-width: ana içerik + sağ TOC kolonunun (yüzdelik
       olduğu için otomatik orantılanır) toplam genişliği.
-   3) --doc-sidebar-width: sol nav — bilinçli olarak DAHA DAR bir aralıkta
-      büyür (300px→~416px) ve orada kilitlenir; bir menü etiketinin
-      okunabilirliği için yeterli genişlik yeter, 4K'da devasa bir boş
-      nav sütunu anlamsız olurdu. Okuma içeriği büyümeye devam ederken
-      UI çerçevesinin (nav, buton) sınırlı büyümesi kasıtlı bir ayrım.
+
+   Sidebar her zaman açık ve normal layout akışında (stok Docusaurus
+   davranışı) — --doc-sidebar-width tek bir akışkan değer, açılıp kapanma
+   durumu yok, dolayısıyla kayma sorunu da yok.
 */
 html {
   font-size: clamp(15px, 0.1667vw + 13.6px, 20px);
@@ -58,7 +57,7 @@ html {
 }
 
 :root {
-  --doc-sidebar-width: clamp(18.75rem, 12vw + 12rem, 26rem);
+  --doc-sidebar-width: clamp(16rem, 11vw + 11rem, 21rem);
 }
 
 /* Tablolardaki backtick alan/tip hücrelerinin taşmasını önle */

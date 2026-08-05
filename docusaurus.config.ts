@@ -76,6 +76,11 @@ const config: Config = {
       defaultMode: 'light',
       respectPrefersColorScheme: true,
     },
+    docs: {
+      sidebar: {
+        autoCollapseCategories: true,
+      },
+    },
     navbar: {
       title: 'Şema Referansı',
       logo: {

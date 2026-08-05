@@ -1422,7 +1422,10 @@ ${tbl.example ? `\n## Örnek Satır (JSON gösterimi)\n\n\`\`\`json\n${JSON.stri
 // Postgres kategori kök sırası
 writeDoc(
   join(DOCS, "postgres", "_category_.json"),
-  JSON.stringify({ label: "PostgreSQL", position: 2, collapsed: false }, null, 2) + "\n"
+  JSON.stringify(
+    { label: "PostgreSQL", position: 2, collapsed: true, customProps: { icon: "/img/icon-postgres.png" } },
+    null, 2
+  ) + "\n"
 );
 
 /* ============================================================
@@ -1431,7 +1434,10 @@ writeDoc(
 
 writeDoc(
   join(DOCS, "mongodb", "_category_.json"),
-  JSON.stringify({ label: "MongoDB", position: 3, collapsed: false }, null, 2) + "\n"
+  JSON.stringify(
+    { label: "MongoDB", position: 3, collapsed: true, customProps: { icon: "/img/icon-mongodb.svg" } },
+    null, 2
+  ) + "\n"
 );
 
 function buildMongoSeedScript(col) {
